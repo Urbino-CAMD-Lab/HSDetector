@@ -1,0 +1,9 @@
+
+=== Membrane Thickness Results ===
+Composition: POPC,CHOL
+Average thickness: 39.96 ± 0.02 Å
+Average APL: 56.94 ± 0.13 Å²
+Average Order parameter: 0.40 ± 0.01
+
+Density profiles saved to: membrane_check/density_profiles.png
+===============================

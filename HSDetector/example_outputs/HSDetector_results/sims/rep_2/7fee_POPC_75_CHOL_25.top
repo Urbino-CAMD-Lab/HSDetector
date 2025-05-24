@@ -1,0 +1,20 @@
+#include "../toppar/martini_v3.0.0.itp"
+#include "../toppar/martini_v3.0.0_phospholipids_v1.itp"
+#include "../toppar/martini_v3.0.0_solvents_v1.itp"
+#include "../toppar/martini_v3.0_sterols_v1.0.itp"
+#include "../toppar/martini_v3.0.0_ions_v1.itp"
+#include "molecule_0.itp"
+
+[ system ]
+; name
+Protein in INSANE! Membrane UpperLeaflet>POPC:CHOL=75.0:25.0 LowerLeaflet>POPC:CHOL=75.0:25.0
+
+[ molecules ]
+; name  number
+molecule_0        1
+POPC           255
+CHOL            85
+POPC           253
+CHOL            84
+W            10406
+CL-              9

@@ -1,0 +1,15 @@
+#include "martini.itp"
+
+[ system ]
+; name
+Protein in INSANE! Membrane UpperLeaflet>POPC:CHOL=75.0:25.0 LowerLeaflet>POPC:CHOL=75.0:25.0
+
+[ molecules ]
+; name  number
+Protein        1
+POPC           255
+CHOL            85
+POPC           253
+CHOL            84
+W            10418
+CL-              9
