@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "HSDetector"
-version = "0.1.0"
+version = "0.1.1"
 description = "Detection of membrane components hot spots around a protein"
 readme = "README.md"
 authors = [{ name = "David Sotillo Núñez", email = "david.sotillo.bq@gmail.com" }]
