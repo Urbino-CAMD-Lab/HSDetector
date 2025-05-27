@@ -1,11 +1,8 @@
 # HSDetector - Cholesterol Hot Spot Detection Pipeline (v0.1.0)
 
 ## Description
-HSDetector is a python module aimed to detect potential cholesterol binding sites around membrane proteins. It is mainly tailored to process class A G Protein-Coupled Receptors, but it can theoretically work with other membrane proteins.
-This tool is designed to be executed with minimal user input and it requires a <ins>pre-processed</ins>, <ins>membrane-oriented</ins> **PDB** file of a  protein and a file specifying the parameters of the run.
-HSDetector relies on the Coarse-Grained Martini 3 representation to carry Molecular Dynamics simulations of the input protein embedded on membranes with cholesterol presence.
-Cholesterol hot spots around the protein are detected by analysing the simulated trajectory using two complementary approaches: statistically relevant cholesterol-contacting residues and cholesterol distribution during the MD simulation:
-The consensus regions where there is an overlap between statistical outliers and relevant density are considered to be cholesterol hot spots. These regions are reported as a **PDB** file containing the residues considered statistical outliers, as well as the relevant density points associated with them.
+**HSDetector** is a python module aimed at detecting potential cholesterol binding sites around membrane proteins.
+Currently, it is mainly tailored to process class A G Protein-Coupled Receptors, but it can work with other membrane proteins with minimal adaptation. This tool is designed to be executed with minimal user intervention. It only requires a pre-processed, membrane-oriented coordinate file of a membrane protein in PDB format and an input file specifying the parameters for the run. HSDetector relies on the **coarse-grained Martini 3** representation to perform **molecular dynamics (MD) simulations** of the input protein after embedding it in a membrane model which includes cholesterol. Cholesterol hot spots around the protein are detected by analysing the simulated trajectory using two complementary approaches: i) pinpointing statistically relevant cholesterol-contacting residues and ii) extracting cholesterol distribution from the MD simulations. The consensus regions where there is an overlap between statistical outliers and relevant density are labelled as cholesterol hot spots. The protocol returns the identified hot spots in PDB format, with the residues considered statistical outliers, as well as the relevant density points associated with them.
 
 ## Installation
 This package can be installed using the command
@@ -15,13 +12,11 @@ pip install HSDetector
 
 ## Inputs
 ### **Pre-processed PDB file:**
-For this tool to work efficiently and to minimise potential errors that could arise from the PDB formatting or the quality of the starting structure it is required to use a PDB that has been properly curated. This means the input structure should be oriented perpendicular to the membrane plane --_aligned to the Z-axis_--, all residues should be complete with no missing atoms and only atoms corresponding to the protein --_no ligands or other HETATM_-- should be present in the PDB.
-
-· Databases such as **OPM** (https://opm.phar.umich.edu/) have a wide variety of already oriented structures that can be used after removing unnecessary atoms.
+For this tool to work efficiently and to minimise potential errors that could arise from PDB formatting or the quality of the starting structure, it is mandatory to use a PDB file that has been previously pre-processed. The input structure should be properly aligned within the membrane, all residues should be complete with no missing atoms and only atoms corresponding to the protein – _no ligands or other HETATM_ – should be included.
+Databases such as **OPM** (https://opm.phar.umich.edu/) have a wide variety of already oriented structures that can be used after removing unnecessary atoms.
 
 ### **Parameters input file:**
-In order to run the protocol several parameters have to be decided in advance and fed to the tool for proper execution.
-Below there is an example **.prm** file with all possible parameters that can be set:
+To run the protocol, several parameters must be defined in advance and provided to the tool. Below is an example **.prm** file that includes all available parameters that can be configured:
 ```
 run_mode = full
 step = system_build/MD_simulation/analysis/merge_data/rank_pockets
@@ -51,7 +46,7 @@ output_dir = /output/path (Default ./HSDetector_results)
 · **gpu** - <ins>Required only if a MD simulation is going to be performed</ins>. Id of the GPU to be used for MD simulations (available GPUs can be checked via ```nvidia-smi``` as long as the CUDA toolkit and NVIDIA(R) drivers are installed).
 NOTE: This protocol relies on the CUDA acceleration implemented in GROMACS. If no GPU is available the source code in MDsimulation.py corresponding to GROMACS runs have to be properly modified.
 
-· **starting_structure** - Path to the input structure. Either the relative path --_relative to where the script will be executed from_-- or the absolute path can be used. We recommend the use of absolute paths to avoid confusions.
+· **starting_structure** - Path to the input structure. Either the relative path – _relative to where the script will be executed from_ – or the absolute path can be used. We recommend the use of absolute paths to avoid confusions.
 
 ### OPTIONAL PARAMETERS
 
@@ -80,34 +75,33 @@ NOTE: This protocol relies on the CUDA acceleration implemented in GROMACS. If n
 · **output_dir** - Path to the directory where the output will be saved. If the target directory does not exist it will be created. Default: ```./HSDetector_results```.
 
 ## Protocol Steps
-A full run of HSDetector will run all the steps detailed below in sequential order. Standalone runs of selected steps can be performed as well. The same **.prm** file can be used for different standalone steps just by adjusting the parameter **step**, as the parameters not used in that step will simply be ignored. However, note that in order to run individual steps, the same directory structure and file naming as used by HSDetector is assumed. It is therefore recommended that individual steps are run on output directories created by HSDetector or adapt the structure and file naming of your data to match what the software expects. An example of the directory structure and the output of a mock run on ```7FEE``` on a ```POPC:75,CHOL:25``` membrane can be found in the example_run/ directory on this repository.
+A full run of HSDetector will run all the steps detailed below in sequential order. Standalone runs of selected steps can be performed as well. The same **.prm** file can be used for different standalone steps just by adjusting the parameter **step**, as the parameters not used in that step will simply be ignored. However, in order to run individual steps, the same directory structure and file naming as used by HSDetector should be used. It is therefore recommended that individual steps are run on output directories created by HSDetector or adapt the structure and file naming of your data to match what the software expects. An example of the directory structure and the output of a mock run on ```7FEE``` on a ```POPC:75,CHOL:25``` membrane can be found in the example_run/ directory on this repository.
 
 1. **SYSTEM BUILD**
 
-This step of the protocol creates the main structure of the output directories and processes the starting structure. The starting PDB is converted to Coarse-Grain using martinize2 and embedded in a membrane of the defined composition with insane.py. 
-HSDetector takes care of copying the necessary inputs and prepare topology files for the simulation step.
+This step of the protocol creates the main structure of the output directories and processes the starting structure. The starting PDB is converted to a coarse-grain representation using martinize2 and it is embedded in a membrane of the defined composition with insane.py. HSDetector takes care of copying the necessary inputs and preparing topology files for the simulation step.
 
 2. **MD SIMULATION**
 
 The prepared system undergoes several steps of equilibration before proceeding to the production run.
 
-a) <ins>Energy minimization</ins>: Using steepest descent the total energy of the system is decreased.
+a) <ins>Energy minimization</ins>: Using a steepest descent minimizer the system is moved toward a local energy minimum.
 
-b) <ins>Equilibration 1 - NVT</ins>: Short NVT to temper the system to the target 300K
+b) <ins>Equilibration 1 - NVT</ins>: Short NVT to thermalize the system to the target temperature (300 K)
 
-c) <ins>Equilibration 2 - NPT (constrained)</ins>: NPT step with protein backbone atoms restricted. Lipids will adjust and equilibrate.
+c) <ins>Equilibration 2 - NPT (constrained)</ins>: NPT step with protein backbone atoms restrained. Lipids will adjust and equilibrate.
 
-d) <ins>Equilibration 3 - NPT  (1fs timestep)</ins>:  NPT step simulated at a short timestep to prevent sudden unexpected atom movement when releasing protein restraints.
+d) <ins>Equilibration 3 - NPT  (1fs timestep)</ins>:  NPT step simulated using a short timestep to prevent sudden unexpected atom movement when releasing protein restraints.
 
-e) <ins>Equilibration 3 - NPT  (20fs timestep)</ins>:  NPT step simulated at the target 20fs timestep at which the production run takes place.
+e) <ins>Equilibration 3 - NPT  (20fs timestep)</ins>:  NPT step simulated at the target 20fs timestep, same as in the production run.
 
-After the equilibration is completed HSDetector performs a quality check of the membrane, aimed for the user to identify any potential issues arised from the system building and equilibration. For this quality check the membrane thickness, area per lipid and order parameters are calculated. Additionally, a plot showing the partial densities of the membrane components is produced. By comparing obtained values with equivalent ones in the literature, the user can ensure that the produced system is realistic.
-	
-The production run lasts for 30 $\mu$s, ensuring proper sampling of protein-cholesterol contacts.
+After the equilibration is completed, HSDetector performs a quality check on the membrane. This allows the user to identify any potential issues arising from the system building and equilibration. To this aim, the membrane thickness, area per lipid and order parameters are calculated. Additionally, a plot showing the partial densities of the membrane components is produced. By comparing obtained values with equivalent ones in the literature, the user can ensure that the produced system is realistic.
+
+The production run last 30 μs, ensuring proper sampling of protein-cholesterol contacts.
 
 3. **ANALYSIS**
 
-As briefly explained in the project Description section, HSDetector uses two approaches to detect cholesterol hot spots.
+HSDetector uses two approaches to detect cholesterol hot spots.
 
 a) **Protein-cholesterol contacts**: Relevant and persistent contacts across all trajectory frames are extracted --_maximum occupancy time, or t<sub>max<sub>_-- and the statistical outliers in the distribution are reported.
 
@@ -115,19 +109,16 @@ b) **Spatial Density Function**: The probability density map of cholesterol arou
 
 4. **MERGE REPLICAS**
 
-This step simply iterates over all produced replicas and merges all the results, creating a CSV file for all of the statistical outliers found and an XYZ file with the total cholesterol density distribution.
+This step simply iterates over all produced replicas and merges the results, creating a CSV file for all of the statistical outliers found and an XYZ file with the total cholesterol density distribution.
 
 5. **RANK POCKETS**
 
-By providing a correctly formatted file with pockets detected in the structure simulated, HSDetector uses the outliers found and the density points to score and rank them based on their propensity to hold cholesterol.
-\- For each outlier found in the residues conforming the pocket the scoring system assigns the pocket 1000 points.
-\- For each density point within 6Å of any atom in the pocket the scoring system assigns the pocket 1 point.
+By providing a formatted file with pockets detected in the simulated structure, HSDetector uses the outliers found and the density points to score and rank these pockets based on their propensity to bind cholesterol. For each outlier found in the residues describing the pocket, the scoring system assigns the pocket 1000 points. For each density point within 6Å of any atom in the pocket the scoring system assigns the pocket 1 point.
 
 ## Example Run
-In example_outputs/ the files created on a mock run with short MD simulation times can be found. This example was conducted on the **Cannabinoid 1 Receptor** (PDB: *7fee*) using a POPC:75,CHOL:25 membrane.
-Note that in order to not overload the repository with heavy files the final production trajectories have been altered to skip keep only every 2nd frame (half of the original frames are kept).
-Additionally, the cube file produced by *gmx spatial* is missing from the example for that very same reason. A file ```grid.cube``` should be located in ```{output_dir}/sims/rep_x/analysis/``` after the **analysis** step.
-This cube file is the one used to convert its 0.01% top (highest probability) of volumetric data to cartesian coordinates. This information is stored in ```{output_dir}/sims/rep_x/analysis/{system_name}_all.xyz```
+In example_outputs/ the files created on a mock run with short MD simulations can be found. This example was conducted on the **Cannabinoid 1 Receptor** (PDB: *7fee*) using a POPC:75,CHOL:25 membrane composition. To avoid overloading the repository with large files, the final production trajectories have been downsampled by keeping only every second frame (i.e., 50% of the original frames). Additionally, the cube file generated by gmx spatial is not included in the example for the same reason.
+
+After the **analysis** step, the cube file (```grid.cube```) should be located in ```{output_dir}/sims/rep_x/analysis/```. This file is used to extract the top 0.01% of the volumetric data (corresponding to the highest probability regions) and convert it to Cartesian coordinates. The resulting coordinates are saved in ```{output_dir}/sims/rep_x/analysis/{system_name}_all.xyz```.
 
 ## Usage
 The correct usage of this tool is quite straightforward, as once it is installed it only requires to run
@@ -139,9 +130,9 @@ With ```HSDetector -h``` or ```HSDetector --help``` a help message with example 
 ## HSDetector tools
 Together with the main functionality of the package two additional tools are provided that will help on running the protocol.
 
-· ```HSDetector_tools generate_prm``` will generate a template **.prm** file that can then be adapted to users needs. Default name is *HSDetector_template.prm* and will be created where the script is executed. However, custom output name can be given by running ```HSDetector_tools generate_prm output_name```.
+· ```HSDetector_tools generate_prm``` will generate a template **.prm** file that can then be adapted to user's needs. Default name is *HSDetector_template.prm* and will be created where the script is executed. However, custom output name can be given by running ```HSDetector_tools generate_prm output_name```.
 
-· ```HSDetector_tools orient_protein input_structure.pdb``` accepts a pdb file and orients it along the Z-axis. Note that this script was designed for GPCRs and it assumes that only the receptor part of the protein (mostly transmembrane) is present in the PDB. Having other extra or intracellular parts of the protein present will cause the orientation of the principal axis of the protein pore to be incorrectly calculated and the resulting orientation will most likely to be shifted.
+· ```HSDetector_tools orient_protein input_structure.pdb``` accepts a pdb file and orients it along the Z-axis. This tool provides a rough starting point for simulations when a more refined alternative is not available. Note that this script was designed for GPCRs and it assumes that only the receptor part of the protein (mostly transmembrane) is present in the PDB. Having other extra or intracellular parts of the protein present will cause the orientation of the principal axis of the protein pore to be incorrectly calculated and the resulting orientation will most likely to be shifted.
 
 ## Citations
 [1] Tsjerk. (n.d.). Tsjerk/insane: Insert membrane - a simple, versatile tool for building coarse-grained simulation systems. GitHub. https://github.com/Tsjerk/Insane 
