@@ -62,7 +62,7 @@ def contacts_analysis(trajectory, structure, prefix):
         res_contacts_dict[res] = [0]
         res_timeframe_dict[res] = [[]]  # Store frame lists as [start, end]
 
-    frames = system.trajectory[25001:]
+    frames = system.trajectory[25001:] # Count after 500 ns
     print('Iterating over frames...')
     for frame in tqdm(frames):
         contacting_res_obj = system.select_atoms(res_contact_selection)

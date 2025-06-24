@@ -1,4 +1,4 @@
-# HSDetector - Cholesterol Hot Spot Detection Pipeline (v0.1.2)
+# HSDetector - Cholesterol Hot Spot Detection Pipeline (v0.1.3)
 
 ## Description
 **HSDetector** is a python module aimed at detecting potential cholesterol binding sites around membrane proteins.
