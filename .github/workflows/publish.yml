@@ -3,7 +3,7 @@ name: Publish to PyPI
 on:
   push:
     tags:
-      - 'v*.*.*'  # only trigger on semiversion tags
+      - 'v*.*.*'  # only trigger on semver tags
 
 permissions:
   contents: read  # restrict unnecessary permissions by default
