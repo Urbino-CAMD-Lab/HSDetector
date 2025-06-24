@@ -117,7 +117,7 @@ def write_outlier_density_pdb(
     merged_outliers_csv: str,
     merged_density_xyz: str,
     output_pdb: str,
-    cutoff: float = 6.0
+    cutoff: float = 5.0
 ):
     """
     Step 5:
